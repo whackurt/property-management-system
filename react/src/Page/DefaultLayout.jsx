@@ -1,23 +1,21 @@
 import React, { useState, useEffect } from "react";
-import { Link, Navigate, Outlet } from "react-router-dom";
+import { Link, Navigate, Outlet, useNavigate } from "react-router-dom";
 import { useStateContext } from "../context/ContextProvider";
 import axiosClient from "../axios-client.js";
+import { Box, IconButton, Typography, Menu, MenuItem } from "@mui/material";
 import {
-  Box,
-  IconButton,
-  Typography,
-  Menu,
-  MenuItem,
-} from "@mui/material";
-import { ProSidebar, Menu as ProMenu, MenuItem as ProMenuItem } from "react-pro-sidebar";
+  ProSidebar,
+  Menu as ProMenu,
+  MenuItem as ProMenuItem,
+} from "react-pro-sidebar";
 import "react-pro-sidebar/dist/css/styles.css";
 import { tokens } from "../../../theme.js";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
 import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
-import InventoryIcon from '@mui/icons-material/Inventory';
-import InventoryRoundedIcon from '@mui/icons-material/InventoryRounded';
+import InventoryIcon from "@mui/icons-material/Inventory";
+import InventoryRoundedIcon from "@mui/icons-material/InventoryRounded";
 import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined"; // Moved import here
 import admin_image from "../img/admin.png";
 import default_img from "../img/default.png";
@@ -50,7 +48,7 @@ const Sidebar = ({ user }) => {
   const [selected, setSelected] = useState("Dashboard");
 
   const renderMenuItems = () => {
-    const { status } = user;
+    const status = localStorage.getItem("status");
 
     switch (status) {
       case "Admin":
@@ -178,18 +176,13 @@ const Sidebar = ({ user }) => {
 
           {!isCollapsed && (
             <Box mb="25px">
-              <Box
-                display="flex"
-                justifyContent="center"
-                alignItems="center"
-              >
+              <Box display="flex" justifyContent="center" alignItems="center">
                 <img
                   alt="profile-user"
                   width="125px"
                   height="125px"
                   src={
-                    user.name &&
-                    user.name.toLowerCase().includes("xyrus")
+                    user.name && user.name.toLowerCase().includes("xyrus")
                       ? admin_image
                       : default_img
                   }
@@ -233,6 +226,8 @@ const DefaultLayout = () => {
   const { user, token, setUser, setToken, notification } = useStateContext();
   const [logoutMenuAnchor, setLogoutMenuAnchor] = useState(null);
 
+  const navigate = useNavigate();
+
   const handleLogoutClick = (event) => {
     setLogoutMenuAnchor(event.currentTarget);
   };
@@ -243,10 +238,12 @@ const DefaultLayout = () => {
 
   const handleLogout = async () => {
     try {
-      await axiosClient.post("/logout");
+      // await axiosClient.post("/logout");
       setUser({});
       setToken(null);
+      localStorage.removeItem("ACCESS_TOKEN");
       handleLogoutClose();
+      return <Navigate to="/login" />;
     } catch (error) {
       console.error("Error logging out:", error);
     }
@@ -262,11 +259,11 @@ const DefaultLayout = () => {
       }
     };
 
-    fetchData();
+    // fetchData();
   }, [setUser]); // Only include setUser in the dependency array
 
   if (!token) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/dashboard" />;
   }
 
   return user ? (
@@ -286,36 +283,42 @@ const DefaultLayout = () => {
           color: "#000",
         }}
       >
-<header
-  style={{
-    background: "#34A853",
-    color: "#fff",
-    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-    padding: "1rem",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    height: "40px",
-  }}
->
-  <div style={{ display: "flex", alignItems: "center", marginLeft: "auto" }}>
-    {user.status === "Manager" && (
-      <IconButton style={{ marginRight: "10px" }}>
-        <NotificationsOutlinedIcon />
-      </IconButton>
-    )}
-    <IconButton onClick={handleLogoutClick}>
-      <PersonOutlinedIcon />
-    </IconButton>
-    <Menu
-      anchorEl={logoutMenuAnchor}
-      open={Boolean(logoutMenuAnchor)}
-      onClose={handleLogoutClose}
-    >
-      <MenuItem onClick={handleLogout}>Logout</MenuItem>
-    </Menu>
-  </div>
-</header>
+        <header
+          style={{
+            background: "#34A853",
+            color: "#fff",
+            boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+            padding: "1rem",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            height: "40px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              marginLeft: "auto",
+            }}
+          >
+            {user.status === "Manager" && (
+              <IconButton style={{ marginRight: "10px" }}>
+                <NotificationsOutlinedIcon />
+              </IconButton>
+            )}
+            <IconButton onClick={handleLogoutClick}>
+              <PersonOutlinedIcon />
+            </IconButton>
+            <Menu
+              anchorEl={logoutMenuAnchor}
+              open={Boolean(logoutMenuAnchor)}
+              onClose={handleLogoutClose}
+            >
+              <MenuItem onClick={handleLogout}>Logout</MenuItem>
+            </Menu>
+          </div>
+        </header>
 
         <main>
           <Outlet />

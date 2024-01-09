@@ -15,6 +15,25 @@ class UserController extends Controller
      *
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
+
+
+    public function getAllUsers(){
+         try{
+            $users = User::all();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Users fetched successfully',
+                'users' => $users
+            ], 200);
+
+        } catch(\Throwable $th){
+            return response()->json([
+                'success' => false,
+                'message' => $th->getMessage()
+            ], 500);
+        }
+    }
     public function index()
     {
         return UserResource::collection(User::query()->orderBy('id', 'desc')->paginate(10));

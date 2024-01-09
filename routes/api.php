@@ -21,13 +21,13 @@ Route::get('/', function(){
         "message" => "Welcome to Property Management System"]);
 });
 
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']);
+Route::controller(UserController::class)->prefix('users')->group(function () {
+    Route::post('/logout', 'logout');
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
 
-    Route::apiResource('/users', UserController::class);
+    Route::get('/', 'getAllUsers');
 });
 
 Route::controller(AuthController::class)->prefix('auth')->group(function () {

@@ -16,12 +16,18 @@ class AuthController extends Controller
                 'name' => 'required|string|max:255',
                 'email' => 'required|email|unique:users,email',
                 'password' => 'required|string|min:8',
+                'status' => 'required|string',
+                'address' => 'required|string',
+                'contact_number' => 'required|string',
             ]);
 
             $user = User::create([
                 'name' => $validatedData['name'],
                 'email' => $validatedData['email'],
                 'password' => bcrypt($validatedData['password']),
+                'status' => $validatedData['status'],
+                'address' => $validatedData['address'],
+                'contact_number' => $validatedData['contact_number'],
             ]);
 
             $token = $user->createToken('authToken')->plainTextToken;
@@ -63,10 +69,7 @@ class AuthController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'User logged in successfully',
-                'user_data' => [
-                    'user_id' => $user->id,
-                    'username'=>$user->name,
-                ],
+                'user_data' => $user,
                 'token' => $token,
             ], 200);
 
