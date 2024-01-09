@@ -51,7 +51,7 @@ export default function Users() {
   const getUsers = () => {
     setLoading(true);
     axiosClient
-      .get("/users")
+      .get("/user")
       .then(({ data }) => {
         console.log("API Response:", data);
         setLoading(false);

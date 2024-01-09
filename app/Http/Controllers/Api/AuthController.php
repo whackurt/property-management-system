@@ -9,44 +9,7 @@ use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-    public function signup(Request $request)
-    {
-        try{
-            $validatedData = $request->validate([
-                'name' => 'required|string|max:255',
-                'email' => 'required|email|unique:users,email',
-                'password' => 'required|string|min:8',
-                'status' => 'required|string',
-                'address' => 'required|string',
-                'contact_number' => 'required|string',
-            ]);
-
-            $user = User::create([
-                'name' => $validatedData['name'],
-                'email' => $validatedData['email'],
-                'password' => bcrypt($validatedData['password']),
-                'status' => $validatedData['status'],
-                'address' => $validatedData['address'],
-                'contact_number' => $validatedData['contact_number'],
-            ]);
-
-            $token = $user->createToken('authToken')->plainTextToken;
-
-            return response()->json([
-                'success' => true,
-                'message' => 'User created successfully',
-                'user_data' => $user,
-                'token' => $token,
-            ], 201);
-
-        } catch(\Throwable $th){
-            return response()->json([
-                'success' => false,
-                'message' => $th->getMessage()
-            ], 500);
-        }
-       
-    }
+    
 
     public function login(Request $request)
     {
