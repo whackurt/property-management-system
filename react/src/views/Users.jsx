@@ -15,6 +15,7 @@ import {
   Button,
 } from "@mui/material";
 import { tokens } from "../../../theme";
+import moment from "moment";
 
 export default function Users() {
   const [users, setUsers] = useState([]);
@@ -30,13 +31,15 @@ export default function Users() {
   }, []);
 
   const onDeleteClick = (user) => {
-    if (!window.confirm("Are you sure you want to delete this user?")) {
-      return;
+    // console.log(user);
+    if (window.confirm("Are you sure you want to delete this user?")) {
+      axiosClient.delete(`/user/delete/${user.id}`).then((res) => {
+        if (res.status === 200) {
+          setNotification("User was successfully deleted");
+          getUsers();
+        }
+      });
     }
-    axiosClient.delete(`/users/${user.id}`).then(() => {
-      setNotification("User was successfully deleted");
-      getUsers();
-    });
   };
 
   const handleCellClick = (params) => {
@@ -53,9 +56,9 @@ export default function Users() {
     axiosClient
       .get("/user")
       .then(({ data }) => {
-        console.log("API Response:", data);
+        // console.log("API Response:", data);
         setLoading(false);
-        setUsers(data.users);
+        setUsers(data?.users);
       })
       .catch((error) => {
         console.error("API Error:", error);
@@ -69,7 +72,7 @@ export default function Users() {
     { field: "email", headerName: "Email", width: 200 },
     { field: "created_at", headerName: "Create Date", width: 200 },
     { field: "status", headerName: "Status", width: 100 },
-    { field: "address", headerName: "Address", width: 200, align: "center" },
+    { field: "address", headerName: "Address", width: 200, align: "left" },
     { field: "contact_number", headerName: "Contact #", width: 150 },
     {
       field: "actions",

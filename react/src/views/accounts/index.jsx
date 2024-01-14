@@ -1,11 +1,13 @@
 import { Box, Typography, useTheme } from "@mui/material";
-import { DataGrid,GridToolbar } from "@mui/x-data-grid";
+import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { tokens } from "../../../../theme";
 import { mockDataTeam } from "../../data/mockData";
 import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
 import LockOpenOutlinedIcon from "@mui/icons-material/LockOpenOutlined";
 import SecurityOutlinedIcon from "@mui/icons-material/SecurityOutlined";
 import Header from "../../components/Header";
+import { useEffect, useState } from "react";
+import { GetUsers } from "../../services/userServices";
 
 const Team = () => {
   const theme = useTheme();
@@ -19,14 +21,7 @@ const Team = () => {
       cellClassName: "name-column--cell",
     },
     {
-      field: "age",
-      headerName: "Age",
-      type: "number",
-      headerAlign: "left",
-      align: "left",
-    },
-    {
-      field: "phone",
+      field: "contact_number",
       headerName: "Phone Number",
       flex: 1,
     },
@@ -36,37 +31,52 @@ const Team = () => {
       flex: 1,
     },
     {
-      field: "accessLevel",
+      field: "status",
       headerName: "Access Level",
       flex: 1,
-      renderCell: ({ row: { access } }) => {
+      renderCell: ({ row: { status } }) => {
         return (
           <Box
             width="60%"
-            m="0 auto"
             p="5px"
             display="flex"
             justifyContent="center"
             backgroundColor={
-              access === "admin"
+              status === "admin"
                 ? colors.blueAccent[700]
-                : access === "manager"
+                : status === "manager"
                 ? colors.blueAccent[700]
                 : colors.blueAccent[700]
             }
             borderRadius="4px"
           >
-            {access === "Admin" && <AdminPanelSettingsOutlinedIcon />}
-            {access === "Manager" && <SecurityOutlinedIcon />}
-            {access === "Establishment" && <LockOpenOutlinedIcon />}
+            {status === "Admin" && <AdminPanelSettingsOutlinedIcon />}
+            {status === "Manager" && <SecurityOutlinedIcon />}
+            {status === "Establishment" && <LockOpenOutlinedIcon />}
             <Typography color={colors.grey[100]} sx={{ ml: "5px" }}>
-              {access}
+              {status}
             </Typography>
           </Box>
         );
       },
     },
   ];
+
+  const [accounts, setAccounts] = useState([]);
+
+  const getAccounts = async () => {
+    const res = await GetUsers();
+
+    // console.log(res);
+
+    if (res.status === 200) {
+      setAccounts(res.data?.users);
+    }
+  };
+
+  useEffect(() => {
+    getAccounts();
+  }, []);
 
   return (
     <Box m="20px 20px 0 20px">
@@ -102,7 +112,11 @@ const Team = () => {
           },
         }}
       >
-        <DataGrid  rows={mockDataTeam} columns={columns} components={{Toolbar:GridToolbar}} />
+        <DataGrid
+          rows={accounts}
+          columns={columns}
+          components={{ Toolbar: GridToolbar }}
+        />
       </Box>
     </Box>
   );
