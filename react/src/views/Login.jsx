@@ -30,11 +30,14 @@ export default function Login() {
     axiosClient
       .post("/auth/login", payload)
       .then(({ data }) => {
-        console.log(data);
+        // console.log(data);
         setUser({
           status: data.user_data?.status,
         });
         localStorage.setItem("status", data.user_data?.status);
+        localStorage.setItem("name", data.user_data?.name);
+        localStorage.setItem("id", data.user_data?.id);
+        localStorage.setItem("activeNav", "Dashboard");
         setToken(data.token);
       })
       .catch((err) => {
