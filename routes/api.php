@@ -33,6 +33,7 @@ Route::controller(UserController::class)->prefix('user')->group(function () {
     });
 
     Route::get('/', 'getAllUsers');
+    Route::get('/{id}', 'getUserById');
     Route::post('/create', 'createUser');
     Route::put('/update/{id}', 'updateUser');
     Route::delete('/delete/{id}', 'deleteUser');
@@ -42,6 +43,7 @@ Route::controller(PropertyController::class)->prefix('property')->group(function
     Route::get('/', 'getAllProperties');
     Route::post('/create', 'createProperty');
     Route::get('/{id}', 'getPropertyById');
+    Route::get('/user/{id}', 'getPropertyByUserId');
     Route::put('/update/{id}', 'updateProperty');
     Route::put('/update-status/{id}', 'updatePropertyStatus');
     Route::delete('/delete/{id}', 'deleteProperty');
