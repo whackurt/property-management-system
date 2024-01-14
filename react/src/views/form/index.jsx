@@ -1,4 +1,12 @@
-import { Box, Button, TextField, FormControl, InputLabel, Select, FormHelperText } from "@mui/material";
+import {
+  Box,
+  Button,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  FormHelperText,
+} from "@mui/material";
 import { Formik } from "formik";
 import * as yup from "yup";
 import Header from "../../components/Header";
@@ -7,6 +15,7 @@ import axiosClient from "../../axios-client.js";
 import { useNavigate, useParams } from "react-router-dom";
 import { useStateContext } from "../../context/ContextProvider.jsx";
 import { useDropzone } from "react-dropzone";
+import { CreateUser, UpdateUser } from "../../services/userServices.js";
 
 const UserForm = () => {
   const navigate = useNavigate();
@@ -20,7 +29,7 @@ const UserForm = () => {
     password_confirmation: "",
     status: "",
     contact: "",
-    address1: "",
+    address: "",
   });
   const [errors, setErrors] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -29,10 +38,11 @@ const UserForm = () => {
     if (id) {
       setLoading(true);
       axiosClient
-        .get(`/users/${id}`)
+        .get(`/user/${id}`)
         .then(({ data }) => {
+          // console.log(data);
           setLoading(false);
-          setUser(data);
+          setUser(data.user_data);
         })
         .catch(() => {
           setLoading(false);
@@ -52,46 +62,47 @@ const UserForm = () => {
     multiple: false, // Allow only a single file to be dropped
   });
 
-  const onSubmit = (values) => {
+  const onSubmit = async (values) => {
     const { password, password_confirmation, ...rest } = values;
 
-    if (password === password_confirmation) {
-      const updatedUser = {
-        ...user,
-        ...rest,
-        password: password,
-      };
+    if (id) {
+      const updates = {};
 
-      if (user.id) {
-        axiosClient
-          .put(`/users/${user.id}`, updatedUser)
-          .then(() => {
-            setNotification("User was successfully updated");
-            navigate("/users");
-          })
-          .catch((err) => {
-            const response = err.response;
-            if (response && response.status === 422) {
-              setErrors(response.data.errors);
-            }
-          });
-      } else {
-        axiosClient
-          .post("/users", updatedUser)
-          .then(() => {
-            setNotification("User was successfully created");
-            navigate("/users");
-          })
-          .catch((err) => {
-            const response = err.response;
-            if (response && response.status === 422) {
-              setErrors(response.data.errors);
-            }
-          });
+      if (values.name) updates.name = values.name;
+      if (values.email) updates.email = values.email;
+      if (values.contact_number) updates.contact_number = values.contact_number;
+
+      if (values.password && values.password === values.password_confirmation)
+        updates.password = values.password;
+      if (values.status) updates.status = values.status;
+      if (values.address) updates.address = values.address;
+
+      // console.log(updates);
+
+      if (updates) {
+        const res = await UpdateUser(id, updates);
+
+        if (res.status === 200) {
+          setNotification("User updated successfully");
+          goBackToProfiles();
+        }
       }
     } else {
-      // Handle password mismatch error
-      setErrors({ password_confirmation: ["Passwords do not match"] });
+      // console.log(values);
+
+      const res = await CreateUser({
+        name: values.name,
+        email: values.email,
+        password: values.password,
+        contact_number: values.contact_number,
+        status: values.status,
+        address: values.address,
+      });
+
+      if (res.status === 201) {
+        setNotification("User created successfully");
+        goBackToProfiles();
+      }
     }
   };
 
@@ -100,16 +111,27 @@ const UserForm = () => {
   };
 
   const validationSchema = yup.object().shape({
-    name: yup.string().required("required"),
-    email: yup.string().email("invalid email").required("required"),
-    password: yup.string().required("required"),
-    password_confirmation: yup
-      .string()
-      .oneOf([yup.ref('password'), null], 'Passwords must match')
-      .required('Confirm Password is required'),
-    status: yup.string().required("required"),
-    address1: yup.string().required("address is required"),
-    contact: yup.string().required("contact number is required"),
+    name: id ? yup.string() : yup.string().required("Name is required"),
+    email: id
+      ? yup.string().email("invalid email")
+      : yup.string().email("invalid email").required("Email is required"),
+    password: id
+      ? yup.string()
+      : yup
+          .string()
+          .required("Email is required")
+          .min(8, "Password must be at least 8 characters"),
+    password_confirmation: id
+      ? yup.string().oneOf([yup.ref("password"), null], "Passwords must match")
+      : yup
+          .string()
+          .oneOf([yup.ref("password"), null], "Passwords must match")
+          .required("Confirm Password is required"),
+    status: id ? yup.string() : yup.string().required("Status is required"),
+    address: id ? yup.string() : yup.string().required("Address is required"),
+    contact_number: id
+      ? yup.string()
+      : yup.string().required("Contact Number is required"),
   });
 
   return (
@@ -121,9 +143,9 @@ const UserForm = () => {
           email: user.email || "",
           password: "",
           password_confirmation: "",
-          status: user.status || "",
-          address1: "", 
-          contact: "",
+          status: user?.status,
+          address: "",
+          contact_number: "",
         }}
         validationSchema={validationSchema}
       >
@@ -136,11 +158,7 @@ const UserForm = () => {
           handleSubmit,
         }) => (
           <form onSubmit={handleSubmit}>
-            <Box
-              display="flex"
-              flexDirection="column"
-              gap="20px"
-            >
+            <Box display="flex" flexDirection="column" gap="20px">
               <Box
                 display="flex"
                 flexDirection="row"
@@ -150,26 +168,13 @@ const UserForm = () => {
               >
                 <div>
                   {id ? (
-                    <Header title={`Update User: ${user.name}`} />
+                    <Header title={`Update User: ${user?.name}`} />
                   ) : (
-                    <Header title="New User" subtitle="Create a New User Profile" />
+                    <Header
+                      title="New User"
+                      subtitle="Create a New User Profile"
+                    />
                   )}
-                </div>
-                <div
-                  {...getRootProps()}
-                  style={{
-                    border: "2px dashed #ddd",
-                    borderRadius: "8px",
-                    padding: "30px",
-                    textAlign: "center",
-                    width: "150px",
-                    height: "150px",
-                    boxSizing: "border-box",
-                    cursor: "pointer",
-                  }}
-                >
-                  <input {...getInputProps()} />
-                  <p>Click or drag to select an image</p>
                 </div>
               </Box>
 
@@ -183,6 +188,7 @@ const UserForm = () => {
                   variant="filled"
                   type="text"
                   label="Name"
+                  placeholder={user?.name}
                   onBlur={handleBlur}
                   onChange={handleChange}
                   value={values.name}
@@ -197,6 +203,7 @@ const UserForm = () => {
                   variant="filled"
                   type="text"
                   label="Email"
+                  placeholder={user?.email}
                   onBlur={handleBlur}
                   onChange={handleChange}
                   value={values.email}
@@ -205,18 +212,19 @@ const UserForm = () => {
                   helperText={touched.email && errors.email}
                   sx={{ gridColumn: "span 2" }}
                 />
-                
+
                 <TextField
                   fullWidth
                   variant="filled"
                   type="text"
+                  placeholder={user?.contact_number}
                   label="Contact Number"
                   onBlur={handleBlur}
                   onChange={handleChange}
-                  value={values.contact}
-                  name="contact"
-                  error={!!touched.contact && !!errors.contact}
-                  helperText={touched.contact && errors.contact}
+                  value={values.contact_number}
+                  name="contact_number"
+                  error={!!touched.contact_number && !!errors.contact_number}
+                  helperText={touched.contact_number && errors.contact_number}
                   sx={{ gridColumn: "span 1" }}
                 />
 
@@ -243,13 +251,25 @@ const UserForm = () => {
                   onChange={handleChange}
                   value={values.password_confirmation}
                   name="password_confirmation"
-                  error={!!touched.password_confirmation && !!errors.password_confirmation}
-                  helperText={touched.password_confirmation && errors.password_confirmation}
+                  error={
+                    !!touched.password_confirmation &&
+                    !!errors.password_confirmation
+                  }
+                  helperText={
+                    touched.password_confirmation &&
+                    errors.password_confirmation
+                  }
                   sx={{ gridColumn: "span 2" }}
                 />
 
-                <FormControl fullWidth variant="filled" sx={{ gridColumn: "span 1" }}>
-                  <InputLabel htmlFor="status" shrink>Status</InputLabel>
+                <FormControl
+                  fullWidth
+                  variant="filled"
+                  sx={{ gridColumn: "span 1" }}
+                >
+                  <InputLabel htmlFor="status" shrink>
+                    Status
+                  </InputLabel>
                   <Select
                     fullWidth
                     native
@@ -257,8 +277,8 @@ const UserForm = () => {
                     onChange={handleChange}
                     onBlur={handleBlur}
                     inputProps={{
-                      name: 'status',
-                      id: 'status',
+                      name: "status",
+                      id: "status",
                     }}
                     error={!!touched.status && !!errors.status}
                   >
@@ -277,19 +297,40 @@ const UserForm = () => {
                 variant="filled"
                 type="text"
                 label="Address"
+                placeholder={user?.address}
                 onBlur={handleBlur}
                 onChange={handleChange}
-                value={values.address1}
-                name="address1"
-                error={!!touched.address1 && !!errors.address1}
-                helperText={touched.address1 && errors.address1}
+                value={values.address}
+                name="address"
+                error={!!touched.address && !!errors.address}
+                helperText={touched.address && errors.address}
               />
             </Box>
-            <Box display="flex" justifyContent="end" mt="20px" paddingRight="10px">
-              <Button onClick={goBackToProfiles} variant="outlined" style={{ marginRight: '10px', borderRadius: "5px", backgroundColor: "green", color: "white" }}>
+            <Box
+              display="flex"
+              justifyContent="end"
+              mt="20px"
+              paddingRight="10px"
+            >
+              <Button
+                onClick={goBackToProfiles}
+                variant="outlined"
+                style={{
+                  marginRight: "10px",
+                  borderRadius: "5px",
+                  backgroundColor: "green",
+                  color: "white",
+                }}
+              >
                 Back to Profiles
               </Button>
-              <Button type="submit" color="secondary" variant="contained" style={{ borderRadius: "5px", backgroundColor: "green" }}>
+              <Button
+                type="submit"
+                color="secondary"
+                variant="contained"
+                style={{ borderRadius: "5px", backgroundColor: "green" }}
+                onClick={() => console.log(values)}
+              >
                 {id ? "Update User" : "Create New User"}
               </Button>
             </Box>
