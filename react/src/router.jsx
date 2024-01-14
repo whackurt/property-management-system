@@ -1,4 +1,4 @@
-import {createBrowserRouter, Navigate} from "react-router-dom";
+import { createBrowserRouter, Navigate } from "react-router-dom";
 import Dashboard from "./Dashboard.jsx";
 import DefaultLayout from "./Page/DefaultLayout";
 import GuestLayout from "./Page/GuestLayout";
@@ -10,72 +10,82 @@ import UserForm from "./views/UserForm";
 import Input from "./views/inputs";
 import Team from "./views/accounts";
 import Reports from "./views/reports";
+import MyReports from "./views/reports/myReports.jsx";
 import Inventory from "./views/inventory";
 import Form from "./views/form";
+import EditReport from "./views/reports/editReport.jsx";
 
 const router = createBrowserRouter([
   {
-    path: '/',
-    element: <DefaultLayout/>,
+    path: "/",
+    element: <DefaultLayout />,
     children: [
       {
-        path: '/',
-        element: <Navigate to="/dashboard"/>
+        path: "/",
+        element: <Navigate to="/dashboard" />,
       },
       {
-        path: '/dashboard',
-        element: <Inventory/>
+        path: "/dashboard",
+        element: <Inventory />,
       },
       {
-        path: '/users',
-        element: <Input/>
-      },      
+        path: "/users",
+        element: <Input />,
+      },
       {
-        path: '/inventory',
-        element: <Input/>
-      },      
+        path: "/inventory",
+        element: <Input />,
+      },
       {
-        path: '/reports',
-        element: <Reports/>
-      },      
+        path: "/reports",
+        element: <Reports />,
+      },
       {
-        path: '/form',
-        element: <Users/>
-      },     
+        path: "/my-reports",
+        element: <MyReports />,
+      },
       {
-        path: '/team',
-        element: <Team/>
-      },        
+        path: "/my-reports/edit/:id",
+        element: <EditReport />,
+      },
       {
-        path: '/users/new',
+        path: "/form",
+        element: <Users />,
+      },
+      {
+        path: "/team",
+        element: <Team />,
+      },
+      {
+        path: "/users/new",
         // element: <UserForm key="userCreate" />
-        element: <Form/>
+        element: <Form />,
       },
       {
-        path: '/users/:id',
+        path: "/users/:id",
         // element: <UserForm key="userUpdate" />
-        element:<Form key="userUpdate"/>
-      }
-    ]
+        element: <Form key="userUpdate" />,
+      },
+    ],
   },
   {
-    path: '/',
-    element: <GuestLayout/>,
+    path: "/",
+    element: <GuestLayout />,
     children: [
       {
-        path: '/login',
-        element: <Login/>
+        path: "/login",
+        element: <Login />,
       },
       {
-        path: '/signup',
-        element: <Signup/>
-      }
-    ]
+        path: "/signup",
+        element: <Signup />,
+      },
+    ],
   },
   {
     path: "*",
-    element: <NotFound/>
-  }
-])
+    element: <NotFound />,
+  },
+]);
 
 export default router;

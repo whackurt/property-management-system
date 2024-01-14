@@ -14,6 +14,11 @@ import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import { tokens } from "../../../../theme";
 import { mockDataInvoices } from "../../data/mockData";
 import Header from "../../components/Header";
+import {
+  GetAllProperties,
+  UpdatePropertyStatus,
+} from "../../services/propertiesServices";
+import { useStateContext } from "../../context/ContextProvider";
 
 const Reports = () => {
   const theme = useTheme();
@@ -22,8 +27,16 @@ const Reports = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [feedback, setFeedback] = useState("");
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+  const [properties, setProperties] = useState([]);
+  const [reformatted, setReformatted] = useState([]);
+  const [selectedId, setSelectedId] = useState(null);
+  const { setNotification } = useStateContext();
 
   const handleCellClick = (params) => {
+    // console.log(params);
+
+    setSelectedId(params.row?.id);
+
     if (params.field !== "__check__") {
       setSelectedRow(params.row);
       // Reset the feedback form visibility
@@ -46,14 +59,13 @@ const Reports = () => {
   };
 
   const handleDenyClick = () => {
-    // If no row is selected, return early
     if (!selectedRow) {
       console.log("No row selected. Returning early.");
       return;
     }
-  
-    console.log("Continuing with the logic...");
-  
+
+    // console.log("Continuing with the logic...");
+
     // Open the modal for feedback only if a row is selected and feedback form is not already shown
     if (selectedRow && !showFeedbackForm) {
       // Show the feedback form
@@ -65,18 +77,39 @@ const Reports = () => {
     }
   };
 
+  const handleAcceptClick = async () => {
+    const res = await UpdatePropertyStatus(selectedId, {
+      status: "Accepted",
+    });
+
+    if (res.status === 200) {
+      setNotification("Report Accepted");
+      getAllProperties();
+      setDialogOpen(false);
+    }
+  };
+
   const handleFeedbackChange = (event) => {
     // Update the feedback state as the user types
     setFeedback(event.target.value);
   };
 
-  const handleDenyConfirm = () => {
+  const handleDenyConfirm = async () => {
     // Handle the logic for Deny confirmation and feedback submission
     // For now, let's log the feedback to the console
-    console.log("Feedback:", feedback);
+    // console.log("Feedback:", feedback);
 
-    // Close the modal
-    setDialogOpen(false);
+    const res = await UpdatePropertyStatus(selectedId, {
+      status: "Denied",
+      feedback: feedback,
+    });
+
+    if (res.status === 200) {
+      setNotification("Report Denied successfully");
+      getAllProperties();
+      setDialogOpen(false);
+      setFeedback("");
+    }
   };
 
   const handleCloseDialog = () => {
@@ -86,21 +119,98 @@ const Reports = () => {
 
   const columns = [
     { field: "id", headerName: "ID", flex: 0.5 },
-    { field: "articles", headerName: "Articles", align: "center" },
-    { field: "description", headerName: "Description", align: "center" },
-    { field: "accountablePerson", headerName: "Accountable Person", align: "center" },
-    { field: "dateOfAssumption", headerName: "Date of Assumption", align: "center" },
-    { field: "quantityPerProperty", headerName: "Quantity per Property", align: "center" },
-    { field: "quantityPerPhysical", headerName: "Quantity per Physical", align: "center" },
-    { field: "shortageOverageQuantity", headerName: "Overage Quantity", align: "center" },
-    { field: "shortageOverageValue", headerName: "Overage Value", align: "center" },
-    { field: "unitOfMeasure", headerName: "Unit of Measure", align: "center" },
-    { field: "unitValue", headerName: "Unit Value", align: "center" },
-    { field: "physicalValue", headerName: "Physical Value", align: "center" },
-    { field: "propertyNumber", headerName: "Property Number", align: "center" },
-    { field: "remarks", headerName: "Remarks", align: "center" },
-    { field: "registrarId", headerName: "Registrar ID", align: "center" },
+    { field: "articles", headerName: "Articles", align: "center", flex: 2 },
+    {
+      field: "description",
+      headerName: "Description",
+      align: "center",
+      flex: 2,
+    },
+    {
+      field: "accountable_person",
+      headerName: "Accountable Person",
+      align: "center",
+      flex: 2,
+    },
+    {
+      field: "date_of_assumption",
+      headerName: "Date of Assumption",
+      align: "center",
+      flex: 2,
+    },
+    {
+      field: "quantity_per_property",
+      headerName: "Quantity per Property",
+      align: "center",
+      flex: 2,
+    },
+    {
+      field: "quantity_per_physical",
+      headerName: "Quantity per Physical",
+      align: "center",
+      flex: 2,
+    },
+    {
+      field: "shortage_overage_quantity",
+      headerName: "Shortage/Overage Quantity",
+      align: "center",
+      flex: 2,
+    },
+    {
+      field: "shortage_overage_value",
+      headerName: "Shortage/Overage Value",
+      align: "center",
+      flex: 2,
+    },
+    {
+      field: "unit_of_measure",
+      headerName: "Unit of Measure",
+      align: "center",
+      flex: 2,
+    },
+    { field: "unit_value", headerName: "Unit Value", align: "center", flex: 2 },
+    {
+      field: "physical_value",
+      headerName: "Physical Value",
+      align: "center",
+      flex: 2,
+    },
+    {
+      field: "property_number",
+      headerName: "Property Number",
+      align: "center",
+      flex: 2,
+    },
+    { field: "remarks", headerName: "Remarks", align: "center", flex: 2 },
+    {
+      field: "registrar_user",
+      headerName: "Registrar",
+      align: "center",
+      flex: 2,
+    },
   ];
+
+  const getAllProperties = async () => {
+    const res = await GetAllProperties();
+
+    if (res.status === 200) {
+      // console.log(res);
+      const fetchedProperties = res.data?.properties.filter(
+        (prop) => prop.status === "Pending"
+      );
+
+      var reformatted = fetchedProperties.map((prop) => ({
+        ...prop,
+        registrar_user: prop.registrar_user?.name,
+      }));
+
+      setProperties(reformatted);
+    }
+  };
+
+  useEffect(() => {
+    getAllProperties();
+  }, []);
 
   useEffect(() => {
     // Display the feedback form when the dialog is open and the "Deny" button is clicked
@@ -121,9 +231,8 @@ const Reports = () => {
           alignItems: "center",
         }}
       >
-        <Header title="REPORTS" subtitle="List of all pending inputs" />
-        <Box display="flex">
-        </Box>
+        <Header title="REPORTS" subtitle="List of All Pending Reports" />
+        <Box display="flex"></Box>
       </div>
       <Box
         height="75vh"
@@ -157,7 +266,7 @@ const Reports = () => {
         }}
       >
         <DataGrid
-          rows={mockDataInvoices}
+          rows={properties}
           columns={columns}
           components={{ Toolbar: GridToolbar }}
           onCellClick={handleCellClick}
@@ -167,72 +276,77 @@ const Reports = () => {
 
       {/* Dialog to display details and collect feedback */}
       <Dialog open={dialogOpen} onClose={handleCloseDialog}>
-      <DialogTitle>Report Details</DialogTitle>
-    <DialogContent>
-    {selectedRow && (
-  <ul>
-    {columns.map((column) => (
-      <li key={column.field}>
-        <strong>{column.headerName}:</strong> {selectedRow[column.field]}
-      </li>
-    ))}
-  </ul>
-)}
+        <DialogTitle>Report Details</DialogTitle>
+        <DialogContent>
+          {selectedRow && (
+            <ul>
+              {columns.map((column) => (
+                <li key={column.field}>
+                  <strong>{column.headerName}:</strong>{" "}
+                  {selectedRow[column.field]}
+                </li>
+              ))}
+            </ul>
+          )}
 
-      {/* Show the feedback form only when Deny button is clicked */}
-      {showFeedbackForm && (
-        <TextareaAutosize
-          placeholder="Provide feedback..."
-          value={feedback}
-          onChange={handleFeedbackChange}
-          style={{ width: "400px", minHeight: "200px", marginTop: "10px" }}
-        />
-      )}
-    </DialogContent>
-    <DialogActions>
-      {/* Updated buttons based on your requirements */}
-      {!showFeedbackForm && (
-        <>
-          <Button
-            onClick={handleCloseDialog}
-            variant="contained"
-            style={{ backgroundColor: "green", color: "white" }}
-          >
-            Accept
-          </Button>
-          <Button
-            onClick={() => handleDenyClick()}
-            variant="contained"
-            style={{ backgroundColor: "red", color: "white" }}
-            disabled={!selectedRow}
-          >
-            Deny
-          </Button>
-        </>
-      )}
-      {showFeedbackForm && (
-        <>
-          <Button
-            onClick={handleDenyConfirm}
-            variant="contained"
-            style={{ backgroundColor: "red", color: "white", marginRight: "10px" }}
-          >
-            Confirm Deny
-          </Button>
-          <Button
-            onClick={() => {
-              setDialogOpen(false);
-              setShowFeedbackForm(false);
-            }}
-            variant="contained"
-            style={{ backgroundColor: "green", color: "white" }}
-          >
-            Cancel
-          </Button>
-        </>
-      )}
-    </DialogActions>
-  </Dialog>
+          {/* Show the feedback form only when Deny button is clicked */}
+          {showFeedbackForm && (
+            <TextareaAutosize
+              placeholder="Provide feedback..."
+              value={feedback}
+              onChange={handleFeedbackChange}
+              style={{ width: "400px", minHeight: "200px", marginTop: "10px" }}
+            />
+          )}
+        </DialogContent>
+        <DialogActions>
+          {/* Updated buttons based on your requirements */}
+          {!showFeedbackForm && (
+            <>
+              <Button
+                onClick={() => handleAcceptClick()}
+                variant="contained"
+                style={{ backgroundColor: "green", color: "white" }}
+              >
+                Accept
+              </Button>
+              <Button
+                onClick={() => handleDenyClick()}
+                variant="contained"
+                style={{ backgroundColor: "red", color: "white" }}
+                disabled={!selectedRow}
+              >
+                Deny
+              </Button>
+            </>
+          )}
+          {showFeedbackForm && (
+            <>
+              <Button
+                onClick={handleDenyConfirm}
+                variant="contained"
+                style={{
+                  backgroundColor: "red",
+                  color: "white",
+                  marginRight: "10px",
+                }}
+              >
+                Confirm Deny
+              </Button>
+              <Button
+                onClick={() => {
+                  setDialogOpen(false);
+                  setShowFeedbackForm(false);
+                }}
+                variant="contained"
+                style={{ backgroundColor: "green", color: "white" }}
+              >
+                Cancel
+              </Button>
+            </>
+          )}
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
