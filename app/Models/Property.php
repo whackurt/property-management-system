@@ -23,11 +23,16 @@ class Property extends Model
         'physical_value',
         'property_number',
         'remarks',
-        'status'
+        'status',
+        'registrar_id'
     ];
 
      public function accountablePerson()
     {
         return $this->belongsTo(User::class, 'accountable_person');
+    }
+    public function registrarUser()
+    {
+        return $this->belongsTo(User::class, 'registrar_id')->select('name');
     }
 }

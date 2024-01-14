@@ -16,9 +16,10 @@ return new class extends Migration
         Schema::create('properties', function (Blueprint $table) {
             $table->id();
             $table->string('articles');
+            $table->string('accountable_person');
             $table->text('description');
-            $table->unsignedBigInteger('accountable_person');
-            $table->foreign('accountable_person')->references('id')->on('users')->onDelete('cascade');
+            $table->unsignedBigInteger('registrar_id'); // Change to unsignedBigInteger
+            $table->foreign('registrar_id')->references('id')->on('users'); // Define foreign key constraint
             $table->date('date_of_assumption');
             $table->integer('quantity_per_property');
             $table->integer('quantity_per_physical');
@@ -29,7 +30,8 @@ return new class extends Migration
             $table->decimal('physical_value', 10, 2);
             $table->string('property_number');
             $table->text('remarks')->nullable();
-            $table->string('status'); // Added a status column as it's mentioned in the error message
+            $table->string('status'); 
+            $table->text('feedback')->nullable();
             $table->timestamps();
         });
     }

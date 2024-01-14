@@ -5,13 +5,14 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Property;
 use Illuminate\Http\Request;
+use User;
 
 class PropertyController extends Controller
 {
    public function getAllProperties()
     {
         try {
-            $properties = Property::with('accountablePerson:id,name')->get();
+            $properties = Property::with('registrarUser:id,name')->get();
             return response()->json(['properties' => $properties], 200);
         } catch (\Throwable $th) {
             return response()->json(['error' => $th->getMessage()], 500);
@@ -21,7 +22,7 @@ class PropertyController extends Controller
     public function getPropertyById($id)
     {
         try {
-            $property = Property::with('accountablePerson:id,name')->find($id);
+            $property = Property::find($id);
 
             if (!$property) {
                 return response()->json(['message' => 'Property not found'], 404);
@@ -33,13 +34,26 @@ class PropertyController extends Controller
         }
     }
 
+    public function getPropertyByUserId($id)
+    {
+        try {
+            $userProperties = Property::with('registrarUser:name')
+            ->where('registrar_id', $id)
+            ->get();
+
+            return response()->json(['properties' => $userProperties], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['error' => $th->getMessage()], 500);
+        }
+    }
+
     public function createProperty(Request $request)
     {
         try {
             $validatedData = $request->validate([
                 'articles' => 'required|string',
                 'description' => 'required|string',
-                'accountable_person' => 'required|exists:users,id',
+                'accountable_person' => 'required|string',
                 'date_of_assumption' => 'required|date',
                 'quantity_per_property' => 'required|integer',
                 'quantity_per_physical' => 'required|integer',
@@ -51,10 +65,11 @@ class PropertyController extends Controller
                 'property_number' => 'required|string',
                 'remarks' => 'nullable|string',
                 'status' => 'required|string',
-
+                'registrar_id' => 'required|integer',
+                'feedback' => 'string',
             ]);
 
-            $property = Property::create($validatedData);
+            $property = Property::create($validatedData);            
 
             return response()->json(['property' => $property, 'message' => 'Property created successfully'], 201);
         } catch (\Throwable $th) {
@@ -74,7 +89,7 @@ class PropertyController extends Controller
             $validatedData = $request->validate([
                 'articles' => 'sometimes|string',
                 'description' => 'sometimes|string',
-                'accountable_person' => 'sometimes|exists:users,id',
+                'accountable_person' => 'sometimes|string',
                 'date_of_assumption' => 'sometimes|date',
                 'quantity_per_property' => 'sometimes|integer',
                 'quantity_per_physical' => 'sometimes|integer',
@@ -86,6 +101,8 @@ class PropertyController extends Controller
                 'property_number' => 'sometimes|string',
                 'remarks' => 'nullable|string',
                 'status' => 'sometimes|string',
+                'registrar_id' => 'sometimes|string',
+                'feedback' => 'sometimes|string',
             ]);
 
             $property->fill($validatedData);
@@ -106,7 +123,7 @@ class PropertyController extends Controller
                 return response()->json(['message' => 'Property not found'], 404);
             }
 
-            $validStatuses = ['accepted', 'denied'];
+            $validStatuses = ['Accepted', 'Denied'];
             $requestedStatus = $request->input('status');
 
             // Check if the requested status is valid
@@ -117,6 +134,7 @@ class PropertyController extends Controller
             // Update the status if it's different from the current status
             if ($property->status !== $requestedStatus) {
                 $property->status = $requestedStatus;
+                $property->feedback = $request->input('feedback');
                 $property->save();
 
                 return response()->json(['message' => 'Property status updated successfully'], 200);
