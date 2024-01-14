@@ -46,11 +46,15 @@ class AuthController extends Controller
        
     }
 
-    public function logout(Request $request)
+  public function logout(Request $request)
     {
-        /** @var \App\Models\User $user */
-        $user = $request->user();
-        $user->currentAccessToken()->delete();
-        return response('', 204);
+        try {
+            /** @var \App\Models\User $user */
+            $user = $request->user();
+            $user->currentAccessToken()->delete();
+            return response('', 204);
+        } catch (\Throwable $th) {
+            return response()->json(['error' => $th->getMessage()], 500);
+        }
     }
 }

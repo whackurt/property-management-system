@@ -75,6 +75,24 @@ class UserController extends Controller
     }
 
 
+    public function getUserById($id)
+    {
+        try {
+            $user = User::findOrFail($id);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User retrieved successfully',
+                'user_data' => $user,
+            ], 200);
+
+        } catch (\Throwable $th) {
+            return response()->json([
+                'success' => false,
+                'message' => $th->getMessage()
+            ], 500);
+        }
+    }
     public function updateUser(Request $request, $id)
     {
         try {
