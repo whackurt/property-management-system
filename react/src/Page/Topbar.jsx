@@ -1,4 +1,4 @@
-import {Box, IconButton, useTheme, Menu, MenuItem  } from "@mui/material";
+import { Box, IconButton, useTheme, Menu, MenuItem } from "@mui/material";
 import { useContext, useState } from "react";
 import { ColorModeContext, tokens } from "../../theme";
 import InputBase from "@mui/material/InputBase";
@@ -59,7 +59,7 @@ const Topbar = () => {
         </IconButton>
         <IconButton>
           <SettingsOutlinedIcon />
-          </IconButton>
+        </IconButton>
         <IconButton onClick={handleLogoutClick}>
           <PersonOutlinedIcon />
         </IconButton>

@@ -16,6 +16,8 @@ import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
 import InventoryIcon from "@mui/icons-material/Inventory";
 import InventoryRoundedIcon from "@mui/icons-material/InventoryRounded";
+import SummarizeOutlinedIcon from "@mui/icons-material/SummarizeOutlined";
+import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined"; // Moved import here
 import admin_image from "../img/admin.png";
 import default_img from "../img/default.png";
@@ -45,7 +47,11 @@ const Sidebar = ({ user }) => {
   const theme = useTheme();
   const colors = tokens(theme.palette.mode);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [selected, setSelected] = useState("Dashboard");
+  const [selected, setSelected] = useState(localStorage.getItem("activeNav"));
+
+  useEffect(() => {
+    localStorage.setItem("activeNav", selected);
+  }, [selected]);
 
   const renderMenuItems = () => {
     const status = localStorage.getItem("status");
@@ -104,7 +110,14 @@ const Sidebar = ({ user }) => {
             <Item
               title="Inventory"
               to="/inventory"
-              icon={<InventoryIcon />}
+              icon={<Inventory2OutlinedIcon />}
+              selected={selected}
+              setSelected={setSelected}
+            />
+            <Item
+              title="My Reports"
+              to="/my-reports"
+              icon={<SummarizeOutlinedIcon />}
               selected={selected}
               setSelected={setSelected}
             />
@@ -201,13 +214,13 @@ const Sidebar = ({ user }) => {
                   fontWeight="bold"
                   sx={{ m: "10px 0 0 0" }}
                 >
-                  {user.name}
+                  {localStorage.getItem("name")}
                 </Typography>
                 <Typography
                   variant="h7"
                   style={{ color: "green", fontWeight: "bold" }}
                 >
-                  {user.status}
+                  {localStorage.getItem("status")}
                 </Typography>
               </Box>
             </Box>
@@ -226,8 +239,6 @@ const DefaultLayout = () => {
   const { user, token, setUser, setToken, notification } = useStateContext();
   const [logoutMenuAnchor, setLogoutMenuAnchor] = useState(null);
 
-  const navigate = useNavigate();
-
   const handleLogoutClick = (event) => {
     setLogoutMenuAnchor(event.currentTarget);
   };
@@ -238,12 +249,13 @@ const DefaultLayout = () => {
 
   const handleLogout = async () => {
     try {
-      // await axiosClient.post("/logout");
       setUser({});
       setToken(null);
-      localStorage.removeItem("ACCESS_TOKEN");
+
+      localStorage.removeItem("status");
+      localStorage.removeItem("activeNav");
+      localStorage.removeItem("name");
       handleLogoutClose();
-      return <Navigate to="/login" />;
     } catch (error) {
       console.error("Error logging out:", error);
     }
@@ -263,7 +275,7 @@ const DefaultLayout = () => {
   }, [setUser]); // Only include setUser in the dependency array
 
   if (!token) {
-    return <Navigate to="/dashboard" />;
+    return <Navigate to="/login" />;
   }
 
   return user ? (
@@ -315,7 +327,7 @@ const DefaultLayout = () => {
               open={Boolean(logoutMenuAnchor)}
               onClose={handleLogoutClose}
             >
-              <MenuItem onClick={handleLogout}>Logout</MenuItem>
+              <MenuItem onClick={() => handleLogout()}>Logout</MenuItem>
             </Menu>
           </div>
         </header>

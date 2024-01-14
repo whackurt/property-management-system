@@ -8,9 +8,9 @@ import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
 import PersonOutlinedIcon from "@mui/icons-material/PersonOutlined";
 import MenuOutlinedIcon from "@mui/icons-material/MenuOutlined";
-import InventoryIcon from '@mui/icons-material/Inventory';
-import InventoryRoundedIcon from '@mui/icons-material/InventoryRounded';
-import admin_image from "../../src/img/admin.png"
+import InventoryIcon from "@mui/icons-material/Inventory";
+import InventoryRoundedIcon from "@mui/icons-material/InventoryRounded";
+import admin_image from "../../src/img/admin.png";
 
 const Item = ({ title, to, icon, selected, setSelected }) => {
   const theme = useTheme();
@@ -74,9 +74,7 @@ const Sidebar = () => {
                 alignItems="center"
                 ml="15px"
               >
-                <Typography variant="h3" color={colors.grey[100]}>
-                  
-                </Typography>
+                <Typography variant="h3" color={colors.grey[100]}></Typography>
                 <IconButton onClick={() => setIsCollapsed(!isCollapsed)}>
                   <MenuOutlinedIcon />
                 </IconButton>
@@ -90,7 +88,7 @@ const Sidebar = () => {
                 <img
                   alt="profile-user"
                   width="100px"
-                  height="100px"  
+                  height="100px"
                   src={admin_image}
                   style={{ cursor: "pointer", borderRadius: "50%" }}
                 />
