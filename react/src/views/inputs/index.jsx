@@ -1,29 +1,61 @@
-import { Box, Button, TextField } from "@mui/material";
+import { Box, Button, MenuItem, TextField } from "@mui/material";
 import { Formik } from "formik";
 import * as yup from "yup";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import Header from "../../components/Header";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
 import FormHelperText from "@mui/material/FormHelperText";
-
+import { CreateProperty } from "../../services/propertiesServices";
+import { useStateContext } from "../../context/ContextProvider";
 
 const Form = () => {
   const isNonMobile = useMediaQuery("(min-width:600px)");
+  const [newProperty, setNewProperty] = useState({});
+  const { setNotification } = useStateContext();
 
-  const handleFormSubmit = (values) => {
-    console.log(values);
+  const handleFormSubmit = async (values, { resetForm }) => {
+    // console.log(newProperty);
+
+    const res = await CreateProperty({
+      articles: values.articles,
+      accountable_person: values.accountablePerson,
+      description: values.description,
+      date_of_assumption: values.dateOfAssumption,
+      quantity_per_property: values.quantityPerProperty,
+      quantity_per_physical: values.quantityPerPhysical,
+      shortage_overage_quantity: values.shortageOverageQuantity,
+      shortage_overage_value: values.shortageOverageValue,
+      unit_of_measure: values.unitOfMeasure,
+      unit_value: values.unitValue,
+      physical_value: values.physicalValue,
+      property_number: values.propertyNumber,
+      remarks: values.remarks,
+      registrar_id: localStorage.getItem("id"),
+      status:
+        localStorage.getItem("status") === "Admin" ? "Accepted" : "Pending",
+    });
+    // console.log(res);
+    if (res.status === 201) {
+      setNotification("New property added successfully");
+      resetForm();
+    }
   };
-  
+
+  useEffect(() => {
+    // console.log(initialValues);
+  }, [initialValues]);
 
   return (
     <Box m="20px">
-      <Header title="NEW FORM" subtitle="CREATE A NEW FORM" />
+      <Header title="NEW PROPERTY" subtitle="ADD A NEW PROPERTY" />
 
       <Formik
-        onSubmit={handleFormSubmit}
+        onSubmit={(values, { resetForm }) =>
+          handleFormSubmit(values, { resetForm })
+        }
         initialValues={initialValues}
         validationSchema={checkoutSchema}
       >
@@ -44,7 +76,7 @@ const Form = () => {
                 "& > div": { gridColumn: isNonMobile ? undefined : "span 4" },
               }}
             >
-               <TextField
+              <TextField
                 fullWidth
                 variant="filled"
                 type="text"
@@ -96,12 +128,8 @@ const Form = () => {
                 onChange={handleChange}
                 value={values.dateOfAssumption}
                 name="dateOfAssumption"
-                error={
-                  !!touched.dateOfAssumption && !!errors.dateOfAssumption
-                }
-                helperText={
-                  touched.dateOfAssumption && errors.dateOfAssumption
-                }
+                error={!!touched.dateOfAssumption && !!errors.dateOfAssumption}
+                helperText={touched.dateOfAssumption && errors.dateOfAssumption}
                 sx={{ gridColumn: "span 2" }}
               />
               <TextField
@@ -114,15 +142,14 @@ const Form = () => {
                 value={values.quantityPerProperty}
                 name="quantityPerProperty"
                 error={
-                  !!touched.quantityPerProperty &&
-                  !!errors.quantityPerProperty
+                  !!touched.quantityPerProperty && !!errors.quantityPerProperty
                 }
                 helperText={
                   touched.quantityPerProperty && errors.quantityPerProperty
                 }
                 sx={{ gridColumn: "span 1" }}
               />
-                <TextField
+              <TextField
                 fullWidth
                 variant="filled"
                 type="number"
@@ -132,128 +159,138 @@ const Form = () => {
                 value={values.quantityPerPhysical}
                 name="quantityPerPhysical"
                 error={
-                  !!touched.quantityPerPhysical &&
-                  !!errors.quantityPerPhysical
+                  !!touched.quantityPerPhysical && !!errors.quantityPerPhysical
                 }
                 helperText={
                   touched.quantityPerPhysical && errors.quantityPerPhysical
                 }
                 sx={{ gridColumn: "span 1" }}
-              />              
+              />
               <TextField
-              fullWidth
-              variant="filled"
-              type="number"
-              label="Shortage Overage - Quantity "
-              onBlur={handleBlur}
-              onChange={handleChange}
-              value={values.shortageOverageQuantity}
-              name="shortageOverageQuantity"
-              error={
-                !!touched.shortageOverageQuantity &&
-                !!errors.shortageOverageQuantity
-              }
-              helperText={
-                touched.shortageOverageQuantity && errors.shortageOverageQuantity
-              }
-              sx={{ gridColumn: "span 1" }}
-            />
-              <TextField
-              fullWidth
-              variant="filled"
-              type="number"
-              label="Shortage Overage - Value "
-              onBlur={handleBlur}
-              onChange={handleChange}
-              value={values.shortageOverageValue}
-              name="shortageOverageValue"
-              error={
-                !!touched.shortageOverageValue &&
-                !!errors.shortageOverageValue
-              }
-              helperText={
-                touched.shortageOverageValue && errors.shortageOverageValue
-              }
-              sx={{ gridColumn: "span 1" }}
-            />
-            <FormControl fullWidth variant="filled" sx={{ gridColumn: "span 1" }}>
-              <InputLabel htmlFor="unitOfMeasure" shrink>
-                Unit of Measure
-              </InputLabel>
-              <Select
                 fullWidth
-                native
-                value={values.unitOfMeasure}
-                onChange={handleChange}
+                variant="filled"
+                type="number"
+                label="Shortage Overage - Quantity "
                 onBlur={handleBlur}
-                inputProps={{
-                  name: 'unitOfMeasure',
-                  id: 'unitOfMeasure',
-                }}
-                error={!!touched.unitOfMeasure && !!errors.unitOfMeasure}
+                onChange={handleChange}
+                value={values.shortageOverageQuantity}
+                name="shortageOverageQuantity"
+                error={
+                  !!touched.shortageOverageQuantity &&
+                  !!errors.shortageOverageQuantity
+                }
+                helperText={
+                  touched.shortageOverageQuantity &&
+                  errors.shortageOverageQuantity
+                }
+                sx={{ gridColumn: "span 1" }}
+              />
+              <TextField
+                fullWidth
+                variant="filled"
+                type="number"
+                label="Shortage Overage - Value "
+                onBlur={handleBlur}
+                onChange={handleChange}
+                value={values.shortageOverageValue}
+                name="shortageOverageValue"
+                error={
+                  !!touched.shortageOverageValue &&
+                  !!errors.shortageOverageValue
+                }
+                helperText={
+                  touched.shortageOverageValue && errors.shortageOverageValue
+                }
+                sx={{ gridColumn: "span 1" }}
+              />
+              <FormControl
+                fullWidth
+                variant="filled"
+                sx={{ gridColumn: "span 1" }}
               >
-                <option value="PCs">pc.</option>
-                <option value="Unit">unit.</option>
-              </Select>
-              {touched.unitOfMeasure && errors.unitOfMeasure && (
-                <FormHelperText error>{errors.unitOfMeasure}</FormHelperText>
-              )}
-            </FormControl>
-            <TextField
-              fullWidth
-              variant="filled"
-              type="number"
-              label="Unit Value"
-              onBlur={handleBlur}
-              onChange={handleChange}
-              value={values.unitValue}
-              name="unitValue"
-              error={!!touched.unitValue && !!errors.unitValue}
-              helperText={touched.unitValue && errors.unitValue}
-              sx={{ gridColumn: "span 1" }}
-            />
-            <TextField
-              fullWidth
-              variant="filled"
-              type="number"
-              label="Physical Value"
-              onBlur={handleBlur}
-              onChange={handleChange}
-              value={values.physicalValue}
-              name="physicalValue"
-              error={!!touched.physicalValue && !!errors.physicalValue}
-              helperText={touched.physicalValue && errors.physicalValue}
-              sx={{ gridColumn: "span 1" }}
-            />
-            <TextField
-              fullWidth
-              variant="filled"
-              type="number"
-              label="Property Number"
-              onBlur={handleBlur}
-              onChange={handleChange}
-              value={values.propertyValue}
-              name="propertyNumber"
-              error={!!touched.propertyNumber && !!errors.propertyNumber}
-              helperText={touched.propertyNumber && errors.propertyNumber}
-              sx={{ gridColumn: "span 1" }}
-            />
-            <TextField
-              fullWidth
-              variant="filled"
-              type="text"
-              label="Remarks"
-              onBlur={handleBlur}
-              onChange={handleChange}
-              value={values.remarks}
-              name="remarks"
-              error={!!touched.remarks && !!errors.remarks}
-              helperText={touched.remarks && errors.remarks}
-              sx={{ gridColumn: "span 2" }}
-            />
+                <InputLabel htmlFor="unitOfMeasure" shrink>
+                  Unit of Measure
+                </InputLabel>
+                <Select
+                  // fullWidth
+                  // native
+                  value={values.unitOfMeasure}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  id="unitOfMeasure"
+                  name="unitOfMeasure"
+                  // inputProps={{
+                  //   name: "unitOfMeasure",
+                  //   id: "unitOfMeasure",
+                  // }}
+                  // error={!!touched.unitOfMeasure && !!errors.unitOfMeasure}
+                >
+                  <MenuItem value={"pcs"}>pc.</MenuItem>
+                  <MenuItem value={"unit"}>unit.</MenuItem>
+                </Select>
+                {touched.unitOfMeasure && errors.unitOfMeasure && (
+                  <FormHelperText error>{errors.unitOfMeasure}</FormHelperText>
+                )}
+              </FormControl>
+              <TextField
+                fullWidth
+                variant="filled"
+                type="number"
+                label="Unit Value"
+                onBlur={handleBlur}
+                onChange={handleChange}
+                value={values.unitValue}
+                name="unitValue"
+                error={!!touched.unitValue && !!errors.unitValue}
+                helperText={touched.unitValue && errors.unitValue}
+                sx={{ gridColumn: "span 1" }}
+              />
+              <TextField
+                fullWidth
+                variant="filled"
+                type="number"
+                label="Physical Value"
+                onBlur={handleBlur}
+                onChange={handleChange}
+                value={values.physicalValue}
+                name="physicalValue"
+                error={!!touched.physicalValue && !!errors.physicalValue}
+                helperText={touched.physicalValue && errors.physicalValue}
+                sx={{ gridColumn: "span 1" }}
+              />
+              <TextField
+                fullWidth
+                variant="filled"
+                type="text"
+                label="Property Number"
+                onBlur={handleBlur}
+                onChange={handleChange}
+                value={values.propertyValue}
+                name="propertyNumber"
+                error={!!touched.propertyNumber && !!errors.propertyNumber}
+                helperText={touched.propertyNumber && errors.propertyNumber}
+                sx={{ gridColumn: "span 1" }}
+              />
+              <TextField
+                fullWidth
+                variant="filled"
+                type="text"
+                label="Remarks"
+                onBlur={handleBlur}
+                onChange={handleChange}
+                value={values.remarks}
+                name="remarks"
+                error={!!touched.remarks && !!errors.remarks}
+                helperText={touched.remarks && errors.remarks}
+                sx={{ gridColumn: "span 2" }}
+              />
             </Box>
-            <Box display="flex" justifyContent="end" mt="20px" >
-            <Button type="submit" style={{ backgroundColor: 'green', color: 'white' }} variant="contained">
+            <Box display="flex" justifyContent="end" mt="20px">
+              <Button
+                type="submit"
+                style={{ backgroundColor: "green", color: "white" }}
+                variant="contained"
+              >
                 Submit
               </Button>
             </Box>
@@ -278,12 +315,14 @@ const checkoutSchema = yup.object().shape({
   quantityPerPhysical: yup
     .number()
     .required("Quantity per Physical is required"),
-  shortageOverageQuantity: yup.string().required("Shortage/Overage is required"),
+  shortageOverageQuantity: yup
+    .string()
+    .required("Shortage/Overage is required"),
   shortageOverageValue: yup.string().required("Shortage/Overage is required"),
   unitOfMeasure: yup.string().required("Unit of Measure is required"),
   unitValue: yup.number().required("Unit Value is required"),
   physicalValue: yup.number().required("Physical Value is required"),
-  propertyNumber: yup.number().required("Property Value is required"),
+  propertyNumber: yup.string().required("Property Value is required"),
   remarks: yup.string().required("Remarks is required"),
 });
 const initialValues = {
