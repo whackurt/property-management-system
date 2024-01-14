@@ -1,9 +1,19 @@
-import React, { useState } from "react";
-import { Box, Typography, Dialog, DialogTitle, DialogContent, DialogActions, Button, useTheme } from "@mui/material";
+import React, { useEffect, useState } from "react";
+import {
+  Box,
+  Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  useTheme,
+} from "@mui/material";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 import Header from "../../components/Header";
 import { mockDataContacts } from "../../data/mockData";
 import { tokens } from "../../../../theme";
+import { GetAllProperties } from "../../services/propertiesServices";
 
 const Contacts = () => {
   const theme = useTheme();
@@ -11,38 +21,116 @@ const Contacts = () => {
 
   const columns = [
     { field: "id", headerName: "ID", flex: 0.5 },
-    { field: "articles", headerName: "Articles", align: "center", flex: 2 },
-    { field: "description", headerName: "Description", align: "center", flex: 2 },
-    { field: "accountablePerson", headerName: "Accountable Person", align: "center", flex: 2 },
-    { field: "dateOfAssumption", headerName: "Date of Assumption", align: "center", flex: 2 },
-    { field: "quantityPerProperty", headerName: "Quantity per Property", align: "center", flex: 2 },
-    { field: "quantityPerPhysical", headerName: "Quantity per Physical", align: "center", flex: 2 },
-    { field: "shortageOverageQuantity", headerName: "Shortage/Overage Quantity", align: "center", flex: 2 },
-    { field: "shortageOverageValue", headerName: "Shortage/Overage Value", align: "center", flex: 2 },
-    { field: "unitOfMeasure", headerName: "Unit of Measure", align: "center", flex: 2 },
-    { field: "unitValue", headerName: "Unit Value", align: "center", flex: 2 },
-    { field: "physicalValue", headerName: "Physical Value", align: "center", flex: 2 },
-    { field: "propertyNumber", headerName: "Property Number", align: "center", flex: 2 },
-    { field: "remarks", headerName: "Remarks", align: "center", flex: 2 },
-    { field: "registrarId", headerName: "Registrar ID", align: "center", flex: 2 },
+    { field: "articles", headerName: "Articles", align: "left", flex: 2 },
+    {
+      field: "description",
+      headerName: "Description",
+      align: "left",
+      flex: 2,
+    },
+    {
+      field: "accountable_person",
+      headerName: "Accountable Person",
+      align: "left",
+      flex: 2,
+    },
+    {
+      field: "date_of_assumption",
+      headerName: "Date of Assumption",
+      align: "left",
+      flex: 2,
+    },
+    {
+      field: "quantity_per_property",
+      headerName: "Quantity per Property",
+      align: "left",
+      flex: 2,
+    },
+    {
+      field: "quantity_per_physical",
+      headerName: "Quantity per Physical",
+      align: "left",
+      flex: 2,
+    },
+    {
+      field: "shortage_overage_quantity",
+      headerName: "Shortage/Overage Quantity",
+      align: "left",
+      flex: 2,
+    },
+    {
+      field: "shortage_overage_value",
+      headerName: "Shortage/Overage Value",
+      align: "left",
+      flex: 2,
+    },
+    {
+      field: "unit_of_measure",
+      headerName: "Unit of Measure",
+      align: "left",
+      flex: 2,
+    },
+    { field: "unit_value", headerName: "Unit Value", align: "left", flex: 2 },
+    {
+      field: "physical_value",
+      headerName: "Physical Value",
+      align: "left",
+      flex: 2,
+    },
+    {
+      field: "property_number",
+      headerName: "Property Number",
+      align: "left",
+      flex: 2,
+    },
+    { field: "remarks", headerName: "Remarks", align: "left", flex: 2 },
+    {
+      field: "registrar_user",
+      headerName: "Registrar",
+      align: "left",
+      flex: 2,
+    },
   ];
 
   const [selectedRow, setSelectedRow] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  const [properties, setProperties] = useState([]);
+
   const handleCellClick = (params) => {
-    const selectedRowIndex = params.row.id - 1; // Adjust index based on your data
-    setSelectedRow(mockDataContacts[selectedRowIndex]);
+    const selectedRowIndex = params.row; // Adjust index based on your data
+    setSelectedRow(selectedRowIndex);
     setDialogOpen(true);
   };
-  
+
   const handleCloseDialog = () => {
     setDialogOpen(false);
   };
 
+  const getAllProperties = async () => {
+    const res = await GetAllProperties();
+
+    if (res.status === 200) {
+      const fetchedProperties = res.data?.properties.filter(
+        (prop) => prop.status === "Accepted"
+      );
+
+      var reformatted = fetchedProperties.map((prop) => ({
+        ...prop,
+        registrar_user: prop.registrar_user?.name,
+      }));
+
+      setProperties(reformatted);
+    }
+  };
+
+  useEffect(() => {
+    getAllProperties();
+  }, []);
+
   return (
     <Box m="20px">
-      <Header title="Inventory" subtitle="Stored Data" />
+      <Header title="Properties" subtitle="Properties Information" />
       <Box
         m="40px 0 0 0"
         height="75vh"
@@ -77,7 +165,7 @@ const Contacts = () => {
         }}
       >
         <DataGrid
-          rows={mockDataContacts}
+          rows={properties}
           columns={columns}
           components={{ Toolbar: GridToolbar }}
           onCellClick={handleCellClick}
@@ -85,19 +173,20 @@ const Contacts = () => {
       </Box>
       <Dialog open={dialogOpen} onClose={handleCloseDialog}>
         <DialogContent>
-        {selectedRow && (
+          {selectedRow && (
             <div>
-              <Typography variant="h6">Selected Row Details:</Typography>
+              <Typography variant="h6">Selected Property</Typography>
               <ul>
                 {columns.map((column) => (
                   <li key={column.field}>
-                    <strong>{column.headerName}:</strong> {selectedRow[column.field]}
+                    <strong>{column.headerName}:</strong>{" "}
+                    {selectedRow[column.field]}
                   </li>
                 ))}
               </ul>
             </div>
           )}
-          </DialogContent>
+        </DialogContent>
 
         <DialogActions>
           <Button onClick={handleCloseDialog}>Close</Button>
